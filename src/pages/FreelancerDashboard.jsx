@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, ArrowUpRight, CheckCircle } from 'lucide-react';
+import { Wallet, ArrowUpRight, CheckCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 
@@ -13,6 +13,9 @@ const FreelancerDashboard = () => {
   const totalEarned = completedTasks.reduce((sum, task) => sum + Number(task.amount), 0);
 
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
+  const [isKycVerified, setIsKycVerified] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleAcceptWork = (id) => {
     updateTaskStatus(id, 'In Progress', 'Me');
@@ -24,11 +27,27 @@ const FreelancerDashboard = () => {
       addToast("No funds available to withdraw.", "error");
       return;
     }
+    
+    if (!isKycVerified) {
+      setShowKycModal(true);
+      return;
+    }
+
     setIsWithdrawing(true);
     setTimeout(() => {
       setIsWithdrawing(false);
       addToast(`Successfully withdrawn $${totalEarned} USDC to your local bank account.`, "success");
     }, 2000);
+  };
+
+  const handleSimulateKyc = () => {
+    setIsVerifying(true);
+    setTimeout(() => {
+      setIsVerifying(false);
+      setIsKycVerified(true);
+      setShowKycModal(false);
+      addToast("Identity Verified successfully! You can now withdraw funds.", "success");
+    }, 2500);
   };
 
   return (
@@ -99,6 +118,39 @@ const FreelancerDashboard = () => {
             ))}
           </div>
         </>
+      )}
+
+      {/* KYC Verification Modal */}
+      {showKycModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(5px)' }}>
+          <div className="glass-panel" style={{ width: '400px', padding: '2rem', textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: '#ffb84d' }}>
+              <ShieldAlert size={48} />
+            </div>
+            <h3 style={{ marginBottom: '1rem' }}>Identity Verification Required</h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              To comply with global anti-money laundering (AML) laws, you must verify your identity before withdrawing funds to a local bank account.
+            </p>
+            
+            <button 
+              className="btn btn-primary" 
+              onClick={handleSimulateKyc}
+              disabled={isVerifying}
+              style={{ width: '100%', marginBottom: '1rem', display: 'flex', justifyContent: 'center', opacity: isVerifying ? 0.7 : 1 }}
+            >
+              {isVerifying ? 'Scanning ID Document...' : 'Start Secure KYC Check'}
+            </button>
+            
+            <button 
+              className="btn btn-outline" 
+              onClick={() => setShowKycModal(false)}
+              disabled={isVerifying}
+              style={{ width: '100%', borderColor: 'transparent', color: 'var(--text-muted)' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
