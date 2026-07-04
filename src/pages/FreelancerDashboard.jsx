@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Wallet, ArrowUpRight, CheckCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const FreelancerDashboard = () => {
+  const { user, publicKey } = useAuth();
   const { tasks, isLoading, updateTaskStatus } = useTasks();
   const { addToast } = useToast();
   const availableTasks = tasks.filter(t => t.status === 'Available');
-  const acceptedTasks = tasks.filter(t => t.status === 'In Progress' && t.freelancer === 'Me');
-  const completedTasks = tasks.filter(t => t.status === 'Completed' && t.freelancer === 'Me');
+  const acceptedTasks = tasks.filter(t => t.status === 'In Progress' && t.freelancer_id === user?.id);
+  const completedTasks = tasks.filter(t => t.status === 'Completed' && t.freelancer_id === user?.id);
   
   const totalEarned = completedTasks.reduce((sum, task) => sum + Number(task.amount), 0);
 
@@ -18,7 +20,7 @@ const FreelancerDashboard = () => {
   const [isVerifying, setIsVerifying] = useState(false);
 
   const handleAcceptWork = (id) => {
-    updateTaskStatus(id, 'In Progress', 'Me');
+    updateTaskStatus(id, 'In Progress', true);
     addToast("Work accepted! Good luck on the task.", "success");
   };
 
@@ -62,11 +64,16 @@ const FreelancerDashboard = () => {
           <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{acceptedTasks.length}</div>
         </div>
         <div className="glass-panel" style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {!publicKey && (
+            <div style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+              <ShieldAlert size={16} /> Wallet Required
+            </div>
+          )}
           <button 
             className="btn btn-primary" 
-            style={{ width: '100%', marginBottom: '0.5rem', opacity: isWithdrawing ? 0.5 : 1 }}
+            style={{ width: '100%', marginBottom: '0.5rem', opacity: isWithdrawing || !publicKey ? 0.5 : 1 }}
             onClick={handleWithdraw}
-            disabled={isWithdrawing}
+            disabled={isWithdrawing || !publicKey}
           >
             <Wallet size={18} /> {isWithdrawing ? 'Processing...' : 'Withdraw to Bank'}
           </button>
@@ -86,11 +93,17 @@ const FreelancerDashboard = () => {
           <div key={task.id} className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
             <div>
               <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>${task.amount} USDC Locked</div>
-              <button className="btn btn-outline" style={{ padding: '0.5rem 1rem' }} onClick={() => handleAcceptWork(task.id)}>
+              <button 
+                className="btn btn-outline" 
+                style={{ padding: '0.5rem 1rem', opacity: !publicKey ? 0.5 : 1 }} 
+                onClick={() => handleAcceptWork(task.id)}
+                disabled={!publicKey}
+                title={!publicKey ? "Connect wallet to accept work" : ""}
+              >
                 Accept Work <ArrowUpRight size={16} />
               </button>
             </div>
@@ -106,7 +119,7 @@ const FreelancerDashboard = () => {
               <div key={task.id} className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
                 <div>
                   <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                   <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>${task.amount} USDC Locked</div>

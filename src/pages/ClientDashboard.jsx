@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { PlusCircle, CheckCircle, Clock } from 'lucide-react';
+import { PlusCircle, CheckCircle, Clock, ShieldAlert } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const ClientDashboard = () => {
+  const { user, publicKey } = useAuth();
   const { tasks, isLoading, addTask, updateTaskStatus } = useTasks();
   const { addToast } = useToast();
-  const clientTasks = tasks.filter(t => t.client === 'Stellar Foundation' && t.status !== 'Available');
+  const clientTasks = tasks.filter(t => t.client_id === user?.id && t.status !== 'Available');
   
   const [isTransacting, setIsTransacting] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -39,10 +41,7 @@ const ClientDashboard = () => {
     setTimeout(() => {
       const newTask = {
         title: newTaskTitle,
-        amount: newTaskAmount,
-        status: 'Available',
-        freelancer: null,
-        client: 'Stellar Foundation'
+        amount: newTaskAmount
       };
       addTask(newTask);
       setNewTaskTitle('');
@@ -79,7 +78,7 @@ const ClientDashboard = () => {
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     <Clock size={14} /> {task.status}
                   </span>
-                  <span>Freelancer: {task.freelancer}</span>
+                  <span>Freelancer: {task.freelancer_id ? task.freelancer_id.slice(0, 8) + '...' : 'Unassigned'}</span>
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -129,10 +128,15 @@ const ClientDashboard = () => {
                 required
               />
             </div>
+            {!publicKey && (
+              <div style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShieldAlert size={16} /> Please connect Freighter Wallet first.
+              </div>
+            )}
             <button 
               className="btn btn-primary" 
-              style={{ marginTop: '1rem', opacity: isTransacting ? 0.5 : 1 }}
-              disabled={isTransacting}
+              style={{ marginTop: '0.5rem', opacity: isTransacting || !publicKey ? 0.5 : 1 }}
+              disabled={isTransacting || !publicKey}
             >
               <PlusCircle size={18}/> {isTransacting ? 'Locking...' : 'Lock Funds in Escrow'}
             </button>

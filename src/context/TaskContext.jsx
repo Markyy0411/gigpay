@@ -1,11 +1,13 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 const TaskContext = createContext();
 
 export const useTasks = () => useContext(TaskContext);
 
 export const TaskProvider = ({ children }) => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,6 +53,7 @@ export const TaskProvider = ({ children }) => {
   }, []);
 
   const addTask = async (task) => {
+    if (!user) return;
     try {
       const { error } = await supabase
         .from('tasks')
@@ -58,7 +61,7 @@ export const TaskProvider = ({ children }) => {
           title: task.title,
           amount: task.amount,
           status: 'Available',
-          client: task.client
+          client_id: user.id
         }]);
 
       if (error) throw error;
@@ -68,15 +71,19 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  const updateTaskStatus = async (id, newStatus, freelancerId = null) => {
+  const updateTaskStatus = async (id, newStatus, assignFreelancer = false) => {
+    if (!user) return;
     try {
       const taskToUpdate = tasks.find(t => t.id === id);
       if (!taskToUpdate) return;
       
       const updatedFields = { 
-        status: newStatus, 
-        freelancer: freelancerId || taskToUpdate.freelancer 
+        status: newStatus 
       };
+
+      if (assignFreelancer) {
+        updatedFields.freelancer_id = user.id;
+      }
 
       const { error } = await supabase
         .from('tasks')

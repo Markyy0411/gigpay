@@ -6,24 +6,61 @@ import ClientDashboard from './pages/ClientDashboard';
 import FreelancerDashboard from './pages/FreelancerDashboard';
 import { TaskProvider } from './context/TaskContext';
 import { ToastProvider } from './context/ToastContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import AuthPage from './pages/AuthPage';
+import { Navigate } from 'react-router-dom';
 import './index.css';
+
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading session...</div>;
+  
+  if (!user) {
+    return <Navigate to="/auth" />;
+  }
+
+  // Optional: check role
+  // if (requiredRole && user.user_metadata?.role !== requiredRole) {
+  //   return <Navigate to="/" />;
+  // }
+
+  return children;
+};
 
 function App() {
   return (
-    <ToastProvider>
-      <TaskProvider>
-        <Router>
-          <div className="container">
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/client" element={<ClientDashboard />} />
-              <Route path="/freelancer" element={<FreelancerDashboard />} />
-            </Routes>
-          </div>
-        </Router>
-      </TaskProvider>
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <TaskProvider>
+          <Router>
+            <div className="container">
+              <Navbar />
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route 
+                  path="/client" 
+                  element={
+                    <ProtectedRoute requiredRole="client">
+                      <ClientDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/freelancer" 
+                  element={
+                    <ProtectedRoute requiredRole="freelancer">
+                      <FreelancerDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </div>
+          </Router>
+        </TaskProvider>
+      </ToastProvider>
+    </AuthProvider>
   );
 }
 
