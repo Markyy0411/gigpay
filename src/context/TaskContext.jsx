@@ -1,13 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { requestWalletSignature } from '../lib/stellar';
 
 const TaskContext = createContext();
 
 export const useTasks = () => useContext(TaskContext);
 
 export const TaskProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, publicKey } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,15 +54,20 @@ export const TaskProvider = ({ children }) => {
   }, []);
 
   const addTask = async (task) => {
-    if (!user) return;
+    if (!user || !publicKey) throw new Error("Wallet not connected");
     try {
+      // 1. Request Wallet Signature for the Smart Contract (Mocked via manageData)
+      await requestWalletSignature(publicKey, `Deposit ${task.amount} USDC to Escrow`);
+
+      // 2. If signed successfully, save to Database
       const { error } = await supabase
         .from('tasks')
         .insert([{
           title: task.title,
           amount: task.amount,
           status: 'Available',
-          client_id: user.id
+          client_id: user.id,
+          contract_id: 'CBRTDAFRUCLVRVYTDMRYM26RPMXC67VO7VMY7ZNVBBR2NVARLOF2KYMH'
         }]);
 
       if (error) throw error;
@@ -72,11 +78,15 @@ export const TaskProvider = ({ children }) => {
   };
 
   const updateTaskStatus = async (id, newStatus, assignFreelancer = false) => {
-    if (!user) return;
+    if (!user || !publicKey) throw new Error("Wallet not connected");
     try {
       const taskToUpdate = tasks.find(t => t.id === id);
       if (!taskToUpdate) return;
       
+      // Request signature based on the action
+      const actionDesc = newStatus === 'Completed' ? 'Release Funds' : 'Accept Escrow Work';
+      await requestWalletSignature(publicKey, `${actionDesc}: Task ${id.slice(0, 8)}`);
+
       const updatedFields = { 
         status: newStatus 
       };
