@@ -7,43 +7,48 @@ export const useTasks = () => useContext(TaskContext);
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
 
-  // Load from localStorage on mount
   useEffect(() => {
-    const savedTasks = localStorage.getItem('gigpay_tasks');
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    } else {
-      // Default seed data if empty
-      const initialTasks = [
-        { id: 1, title: 'Design Landing Page', amount: '150', status: 'In Progress', freelancer: 'GBQX...3F1A', client: 'Stellar Foundation' },
-        { id: 2, title: 'Write Smart Contract', amount: '300', status: 'Completed', freelancer: 'GCAE...9B22', client: 'DeFi Protocol X' },
-        { id: 3, title: 'React Frontend Fixes', amount: '200', status: 'Available', freelancer: null, client: 'Stellar Foundation' },
-        { id: 4, title: 'Smart Contract Audit', amount: '500', status: 'Available', freelancer: null, client: 'DeFi Protocol X' }
-      ];
-      setTasks(initialTasks);
-      localStorage.setItem('gigpay_tasks', JSON.stringify(initialTasks));
-    }
+    fetch('http://localhost:3001/tasks')
+      .then(res => res.json())
+      .then(data => setTasks(data))
+      .catch(err => console.error("Failed to fetch tasks:", err));
   }, []);
 
-  // Save to localStorage whenever tasks change
-  useEffect(() => {
-    if (tasks.length > 0) {
-      localStorage.setItem('gigpay_tasks', JSON.stringify(tasks));
+  const addTask = async (task) => {
+    try {
+      const response = await fetch('http://localhost:3001/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      });
+      const newTask = await response.json();
+      setTasks([newTask, ...tasks]);
+    } catch (err) {
+      console.error("Failed to add task:", err);
     }
-  }, [tasks]);
-
-  const addTask = (task) => {
-    const newTask = { ...task, id: Date.now() };
-    setTasks(prevTasks => [newTask, ...prevTasks]);
   };
 
-  const updateTaskStatus = (id, newStatus, freelancerId = null) => {
-    setTasks(prevTasks => prevTasks.map(task => {
-      if (task.id === id) {
-        return { ...task, status: newStatus, freelancer: freelancerId || task.freelancer };
-      }
-      return task;
-    }));
+  const updateTaskStatus = async (id, newStatus, freelancerId = null) => {
+    try {
+      const taskToUpdate = tasks.find(t => t.id === id);
+      if (!taskToUpdate) return;
+      
+      const updatedFields = { 
+        status: newStatus, 
+        freelancer: freelancerId || taskToUpdate.freelancer 
+      };
+
+      const response = await fetch(`http://localhost:3001/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+      });
+      const updatedTask = await response.json();
+      
+      setTasks(tasks.map(task => task.id === id ? updatedTask : task));
+    } catch (err) {
+      console.error("Failed to update task:", err);
+    }
   };
 
   return (
