@@ -1,22 +1,33 @@
 import React, { useState } from 'react';
 import { PlusCircle, CheckCircle, Clock } from 'lucide-react';
+import { useTasks } from '../context/TaskContext';
+import { useToast } from '../context/ToastContext';
 
 const ClientDashboard = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Design Landing Page', amount: '150', status: 'In Progress', freelancer: 'GBQX...3F1A' },
-    { id: 2, title: 'Write Smart Contract', amount: '300', status: 'Completed', freelancer: 'GCAE...9B22' }
-  ]);
+  const { tasks, addTask, updateTaskStatus } = useTasks();
+  const { addToast } = useToast();
+  const clientTasks = tasks.filter(t => t.client === 'Stellar Foundation' && t.status !== 'Available');
+  
   const [isTransacting, setIsTransacting] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAmount, setNewTaskAmount] = useState('');
+  const [taskToApprove, setTaskToApprove] = useState(null);
+  const [confirmText, setConfirmText] = useState('');
 
-  const handleApprove = (id) => {
+  const initiateApproval = (id) => {
+    setTaskToApprove(id);
+    setConfirmText('');
+  };
+
+  const handleApprove = () => {
+    if (confirmText !== 'CONFIRM' || !taskToApprove) return;
     setIsTransacting(true);
+    setTaskToApprove(null);
     // Simulate Stellar network transaction delay
     setTimeout(() => {
-      setTasks(tasks.map(t => t.id === id ? { ...t, status: 'Completed' } : t));
+      updateTaskStatus(taskToApprove, 'Completed');
       setIsTransacting(false);
-      alert("Transaction Confirmed on Stellar Testnet! Funds released.");
+      addToast("Transaction Confirmed! Funds released to freelancer.", "success");
     }, 2500);
   };
 
@@ -27,16 +38,17 @@ const ClientDashboard = () => {
     
     setTimeout(() => {
       const newTask = {
-        id: tasks.length + 1,
         title: newTaskTitle,
         amount: newTaskAmount,
-        status: 'In Progress',
-        freelancer: 'Pending...'
+        status: 'Available',
+        freelancer: null,
+        client: 'Stellar Foundation'
       };
-      setTasks([newTask, ...tasks]);
+      addTask(newTask);
       setNewTaskTitle('');
       setNewTaskAmount('');
       setIsTransacting(false);
+      addToast("Task Escrow created successfully!", "success");
     }, 1500);
   };
 
@@ -52,7 +64,8 @@ const ClientDashboard = () => {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
         {/* Task List */}
         <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {tasks.map(task => (
+          {clientTasks.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No active tasks.</p> : null}
+          {clientTasks.map(task => (
             <div key={task.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ marginBottom: '0.25rem' }}>{task.title}</h3>
@@ -70,11 +83,11 @@ const ClientDashboard = () => {
                 {task.status === 'In Progress' ? (
                   <button 
                     className="btn btn-outline" 
-                    onClick={() => handleApprove(task.id)}
+                    onClick={() => initiateApproval(task.id)}
                     disabled={isTransacting}
                     style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', borderColor: 'var(--accent)', color: 'var(--accent)', opacity: isTransacting ? 0.5 : 1 }}
                   >
-                    <CheckCircle size={14} /> {isTransacting ? 'Signing tx...' : 'Approve & Pay'}
+                    <CheckCircle size={14} /> {isTransacting ? 'Processing...' : 'Approve & Pay'}
                   </button>
                 ) : (
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Paid</span>
@@ -120,6 +133,47 @@ const ClientDashboard = () => {
           </form>
         </div>
       </div>
+
+      {/* AWS-style Confirmation Modal */}
+      {taskToApprove && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(5px)' }}>
+          <div className="glass-panel" style={{ width: '400px', padding: '2rem', border: '1px solid #ff4444' }}>
+            <h3 style={{ color: '#ff4444', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              ⚠️ Danger Zone
+            </h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+              You are about to release funds from escrow. This action is irreversible on the blockchain.
+            </p>
+            <p style={{ marginBottom: '0.5rem' }}>
+              To proceed, please type <strong>CONFIRM</strong> below:
+            </p>
+            <input 
+              type="text" 
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="CONFIRM"
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ff4444', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem' }} 
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => setTaskToApprove(null)}
+                style={{ padding: '0.5rem 1rem', borderColor: 'var(--text-muted)', color: 'var(--text-muted)' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn" 
+                onClick={handleApprove}
+                disabled={confirmText !== 'CONFIRM'}
+                style={{ padding: '0.5rem 1rem', backgroundColor: confirmText === 'CONFIRM' ? '#ff4444' : '#555', color: 'white', cursor: confirmText === 'CONFIRM' ? 'pointer' : 'not-allowed' }}
+              >
+                Force Release Funds
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
