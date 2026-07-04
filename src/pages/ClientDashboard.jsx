@@ -4,7 +4,7 @@ import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 
 const ClientDashboard = () => {
-  const { tasks, addTask, updateTaskStatus } = useTasks();
+  const { tasks, isLoading, addTask, updateTaskStatus } = useTasks();
   const { addToast } = useToast();
   const clientTasks = tasks.filter(t => t.client === 'Stellar Foundation' && t.status !== 'Available');
   
@@ -64,8 +64,14 @@ const ClientDashboard = () => {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
         {/* Task List */}
         <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {clientTasks.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No active tasks.</p> : null}
-          {clientTasks.map(task => (
+          {isLoading ? (
+            <div className="glass-panel" style={{ display: 'flex', justifyContent: 'center', padding: '2rem', color: 'var(--accent)' }}>
+              Loading tasks from blockchain...
+            </div>
+          ) : clientTasks.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)' }}>No active tasks.</p>
+          ) : null}
+          {!isLoading && clientTasks.map(task => (
             <div key={task.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ marginBottom: '0.25rem' }}>{task.title}</h3>

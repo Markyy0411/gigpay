@@ -4,7 +4,7 @@ import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 
 const FreelancerDashboard = () => {
-  const { tasks, updateTaskStatus } = useTasks();
+  const { tasks, isLoading, updateTaskStatus } = useTasks();
   const { addToast } = useToast();
   const availableTasks = tasks.filter(t => t.status === 'Available');
   const acceptedTasks = tasks.filter(t => t.status === 'In Progress' && t.freelancer === 'Me');
@@ -56,8 +56,14 @@ const FreelancerDashboard = () => {
 
       <h3 style={{ marginBottom: '1.5rem' }}>Available Funded Tasks</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {availableTasks.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No tasks available right now.</p> : null}
-        {availableTasks.map(task => (
+        {isLoading ? (
+          <div className="glass-panel" style={{ display: 'flex', justifyContent: 'center', padding: '2rem', color: 'var(--accent)' }}>
+            Syncing with Supabase Realtime...
+          </div>
+        ) : availableTasks.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)' }}>No tasks available right now.</p>
+        ) : null}
+        {!isLoading && availableTasks.map(task => (
           <div key={task.id} className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
             <div>
               <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>

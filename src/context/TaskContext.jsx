@@ -7,9 +7,11 @@ export const useTasks = () => useContext(TaskContext);
 
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTasks = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -20,27 +22,47 @@ export const TaskProvider = ({ children }) => {
       } else if (data) {
         setTasks(data);
       }
+      setIsLoading(false);
     };
 
     fetchTasks();
+
+    // Set up Realtime Subscription
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setTasks((prev) => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setTasks((prev) => prev.map((t) => t.id === payload.new.id ? payload.new : t));
+          } else if (payload.eventType === 'DELETE') {
+            setTasks((prev) => prev.filter((t) => t.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const addTask = async (task) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .insert([{
           title: task.title,
           amount: task.amount,
           status: 'Available',
           client: task.client
-        }])
-        .select();
+        }]);
 
       if (error) throw error;
-      if (data && data.length > 0) {
-        setTasks(prev => [data[0], ...prev]);
-      }
+      // Realtime listener handles the state update
     } catch (err) {
       console.error("Failed to add task to Supabase:", err);
     }
@@ -56,23 +78,20 @@ export const TaskProvider = ({ children }) => {
         freelancer: freelancerId || taskToUpdate.freelancer 
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .update(updatedFields)
-        .eq('id', id)
-        .select();
+        .eq('id', id);
 
       if (error) throw error;
-      if (data && data.length > 0) {
-        setTasks(prev => prev.map(task => task.id === id ? data[0] : task));
-      }
+      // Realtime listener handles the state update
     } catch (err) {
       console.error("Failed to update task in Supabase:", err);
     }
   };
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, updateTaskStatus }}>
+    <TaskContext.Provider value={{ tasks, isLoading, addTask, updateTaskStatus }}>
       {children}
     </TaskContext.Provider>
   );
