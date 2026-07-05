@@ -2,6 +2,10 @@
 create table public.profiles (
   id uuid references auth.users(id) primary key,
   role text not null check (role in ('client', 'freelancer')),
+  display_name text,
+  bio text,
+  company_name text,
+  portfolio_url text,
   is_kyc_verified boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -15,8 +19,8 @@ create policy "Users can update their own profile." on public.profiles for updat
 create function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, role)
-  values (new.id, new.raw_user_meta_data->>'role');
+  insert into public.profiles (id, role, display_name)
+  values (new.id, new.raw_user_meta_data->>'role', new.raw_user_meta_data->>'display_name');
   return new;
 end;
 $$ language plpgsql security definer;

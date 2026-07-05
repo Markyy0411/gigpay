@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import ClientDashboard from './pages/ClientDashboard';
 import FreelancerDashboard from './pages/FreelancerDashboard';
+import ProfilePage from './pages/ProfilePage';
 import { TaskProvider } from './context/TaskContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -39,6 +40,14 @@ function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route 
                   path="/client" 
                   element={

@@ -27,11 +27,15 @@ const AuthPage = () => {
         navigate(userRole === 'client' ? '/client' : '/freelancer');
       } else {
         const data = await signUp(email, password, { role });
-        addToast("Account created successfully! You can now log in.", "success");
+        addToast("Account created successfully! Please check your email to verify your account before logging in.", "success");
         setIsLogin(true); // switch to login mode so they can log in, or redirect if auto-login
       }
     } catch (error) {
-      addToast(error.message || "An error occurred.", "error");
+      if (error.message.includes('Email not confirmed')) {
+        addToast("Please check your email and click the confirmation link before logging in.", "error");
+      } else {
+        addToast(error.message || "An error occurred.", "error");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 import { requestWalletSignature } from '../lib/stellar';
 
 const TaskContext = createContext();
@@ -9,6 +10,7 @@ export const useTasks = () => useContext(TaskContext);
 
 export const TaskProvider = ({ children }) => {
   const { user, publicKey } = useAuth();
+  const { addToast } = useToast();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,6 +43,17 @@ export const TaskProvider = ({ children }) => {
             setTasks((prev) => [payload.new, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
             setTasks((prev) => prev.map((t) => t.id === payload.new.id ? payload.new : t));
+            
+            // Check if we need to show a realtime notification
+            if (user) {
+              if (payload.new.status === 'In Progress' && payload.old.status === 'Available' && payload.new.client_id === user.id) {
+                addToast("A freelancer has accepted your task!", "success");
+              }
+              if (payload.new.status === 'Completed' && payload.old.status === 'In Progress' && payload.new.freelancer_id === user.id) {
+                addToast("The client has released your funds!", "success");
+              }
+            }
+
           } else if (payload.eventType === 'DELETE') {
             setTasks((prev) => prev.filter((t) => t.id !== payload.old.id));
           }

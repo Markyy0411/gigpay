@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, ShieldAlert, LogOut } from 'lucide-react';
+import { Zap, ShieldAlert, LogOut, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
@@ -52,6 +52,9 @@ const Navbar = () => {
               <button className="btn btn-primary" onClick={handleConnect}>Connect Wallet</button>
             )}
 
+            <Link to="/profile" className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'transparent', color: 'var(--text-main)' }}>
+              <User size={16} /> Profile
+            </Link>
             <button onClick={handleSignOut} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'transparent', color: 'var(--text-muted)' }}>
               <LogOut size={16} /> Sign Out
             </button>
