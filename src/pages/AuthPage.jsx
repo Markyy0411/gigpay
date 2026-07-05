@@ -74,14 +74,42 @@ const AuthPage = () => {
           {!isLogin && (
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>I am a...</label>
-              <select 
-                value={role} 
-                onChange={(e) => setRole(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
-              >
-                <option value="client">Client (Hiring)</option>
-                <option value="freelancer">Freelancer (Working)</option>
-              </select>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setRole('client')}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    borderRadius: '0.5rem',
+                    border: role === 'client' ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    background: role === 'client' ? 'rgba(0, 240, 255, 0.1)' : 'rgba(0,0,0,0.2)',
+                    color: role === 'client' ? 'var(--accent)' : 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    fontWeight: role === 'client' ? 'bold' : 'normal'
+                  }}
+                >
+                  Client (Hiring)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('freelancer')}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    borderRadius: '0.5rem',
+                    border: role === 'freelancer' ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    background: role === 'freelancer' ? 'rgba(0, 240, 255, 0.1)' : 'rgba(0,0,0,0.2)',
+                    color: role === 'freelancer' ? 'var(--accent)' : 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    fontWeight: role === 'freelancer' ? 'bold' : 'normal'
+                  }}
+                >
+                  Freelancer (Working)
+                </button>
+              </div>
             </div>
           )}
 
