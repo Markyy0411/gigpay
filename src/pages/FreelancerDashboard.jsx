@@ -3,6 +3,7 @@ import { Wallet, ArrowUpRight, CheckCircle, ShieldAlert, ShieldCheck } from 'luc
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { requestWalletSignature } from '../lib/stellar';
 
 const FreelancerDashboard = () => {
   const { user, publicKey } = useAuth();
@@ -15,16 +16,25 @@ const FreelancerDashboard = () => {
   const totalEarned = completedTasks.reduce((sum, task) => sum + Number(task.amount), 0);
 
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
   const [isKycVerified, setIsKycVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleAcceptWork = (id) => {
-    updateTaskStatus(id, 'In Progress', true);
-    addToast("Work accepted! Good luck on the task.", "success");
+  const handleAcceptWork = async (id, amount) => {
+    setIsAccepting(true);
+    try {
+      await requestWalletSignature(publicKey, `Accept Escrow Contract for $${amount} USDC`);
+      updateTaskStatus(id, 'In Progress', true);
+      addToast("Work accepted! Good luck on the task.", "success");
+    } catch (error) {
+      addToast(error.message || "Failed to sign acceptance.", "error");
+    } finally {
+      setIsAccepting(false);
+    }
   };
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     if (totalEarned === 0) {
       addToast("No funds available to withdraw.", "error");
       return;
@@ -36,10 +46,14 @@ const FreelancerDashboard = () => {
     }
 
     setIsWithdrawing(true);
-    setTimeout(() => {
-      setIsWithdrawing(false);
+    try {
+      await requestWalletSignature(publicKey, `Withdraw $${totalEarned} USDC from Escrow`);
       addToast(`Successfully withdrawn $${totalEarned} USDC to your local bank account.`, "success");
-    }, 2000);
+    } catch (error) {
+      addToast(error.message || "Withdrawal signature failed.", "error");
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const handleSimulateKyc = () => {
@@ -97,15 +111,15 @@ const FreelancerDashboard = () => {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>${task.amount} USDC Locked</div>
-              <button 
-                className="btn btn-outline" 
-                style={{ padding: '0.5rem 1rem', opacity: !publicKey ? 0.5 : 1 }} 
-                onClick={() => handleAcceptWork(task.id)}
-                disabled={!publicKey}
-                title={!publicKey ? "Connect wallet to accept work" : ""}
-              >
-                Accept Work <ArrowUpRight size={16} />
-              </button>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ padding: '0.5rem 1rem', opacity: !publicKey || isAccepting ? 0.5 : 1 }} 
+                  onClick={() => handleAcceptWork(task.id, task.amount)}
+                  disabled={!publicKey || isAccepting}
+                  title={!publicKey ? "Connect wallet to accept work" : ""}
+                >
+                  {isAccepting ? 'Signing...' : <>Accept Work <ArrowUpRight size={16} /></>}
+                </button>
             </div>
           </div>
         ))}

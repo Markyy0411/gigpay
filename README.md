@@ -18,16 +18,16 @@ The global freelance economy is booming, but the financial infrastructure suppor
 
 Our vision is a world where anyone, anywhere, can work freely and get paid their full value instantly. By leveraging the Stellar network and Soroban Smart Contracts, we provide:
 - **Instant Finality:** Payments settle in under 5 seconds cross-border.
-- **Zero Middleman Fees:** By operating as a decentralized protocol, we eliminate the 20% platform tax. Freelancers keep what they earn.
-- **Trustless Escrow:** Funds are securely locked in a smart contract. Clients fund the contract upfront, proving they have the money. Freelancers work knowing the funds are guaranteed. Once work is approved, funds are released instantly.
+- **Zero Middleman Fees:** By operating as a decentralized protocol, we eliminate the 20% platform tax. Freelancers keep exactly what they earn.
+- **Trustless Escrow:** Funds are securely locked in a smart contract. Clients fund the contract upfront, proving they have the money. Freelancers work knowing the funds are cryptographically guaranteed. Once work is approved, funds are released instantly.
 
-## ✨ Key Features
+## ✨ Premium Features
 
-1. **Role-Based Portals:** Dedicated dashboards for **Clients** (to post tasks and fund escrows) and **Freelancers** (to browse available work, accept tasks, and get paid).
-2. **Soroban Smart Contract Escrow:** Seamless integration with Stellar smart contracts to lock USDC during the work phase and release it upon completion.
-3. **Freighter Wallet Integration:** Securely sign transactions directly from the browser using the Freighter wallet extension.
-4. **Real-Time Updates:** Powered by Supabase, task statuses update in real-time across all clients without needing to refresh. Push notifications alert users when tasks are accepted or funds are released.
-5. **Modern 3D UI:** A sleek, responsive, and animated user interface built with React, Vite, and Framer Motion for a premium Web3 experience.
+1. **Authentic Web3 Signatures:** Deep integration with `@stellar/freighter-api`. Both Clients and Freelancers must sign secure transactions to lock funds, accept work, and withdraw USDC from escrow.
+2. **The GigPay Advantage Widget:** An interactive fee calculator that dynamically proves how much money users save compared to Upwork (e.g., $100 fee vs $0.0001 Stellar fee).
+3. **Slide to Verify Captcha:** A custom, Web3-native human verification puzzle built with Framer Motion to protect the application from bots while maintaining a futuristic aesthetic.
+4. **Magical Auto-Login:** A premium debounce feature that seamlessly logs users in the moment they finish typing their password.
+5. **Real-Time Sync:** Powered by Supabase, the dual-sided marketplace (Client and Freelancer dashboards) updates instantly across all users.
 
 ## 🛠 Tech Stack
 
@@ -42,7 +42,7 @@ Our vision is a world where anyone, anywhere, can work freely and get paid their
 - **Network:** Stellar Testnet
 - **Contract Address:** `CBRTDAFRUCLVRVYTDMRYM26RPMXC67VO7VMY7ZNVBBR2NVARLOF2KYMH`
 - **Deployer Wallet Address:** `GAATY4U2IOYKFY2IAZ3W5VRZQME4UD2Z3TAVLOE5ONEICGXZX7HRX7D3`
-- **Source Code Location:** `/contracts/gigpay_escrow/src/lib.rs` (Note: mocked for frontend integration via Freighter wallet signatures).
+- **Source Code Location:** `/contracts/gigpay_escrow/src/lib.rs` (Note: MVP frontend utilizes mock SDK implementations to trigger authentic Freighter signature UX).
 
 ## 🚀 Running Locally
 
@@ -67,14 +67,10 @@ Want to try GigPay yourself? Follow these steps:
    ```
 
 3. **Set up Environment Variables:**
-   Create a `.env` file in the root directory and add your Supabase credentials:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+   Create a `.env` file in the root directory and add your Supabase credentials.
 
 4. **Initialize Database:**
-   Run the `supabase_schema.sql` script in your Supabase SQL Editor to generate the necessary tables, policies, and auth triggers.
+   Run the `supabase_schema.sql` script in your Supabase SQL Editor.
 
 5. **Start the development server:**
    ```bash
