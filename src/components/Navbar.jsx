@@ -29,10 +29,10 @@ const Navbar = () => {
 
   return (
     <nav className="navbar animate-fade-in" style={{ flexWrap: 'wrap' }}>
-      <Link to="/" className="logo">
+      <a href="/" className="logo">
         <Zap className="logo-icon" fill="currentColor" />
         GigPay
-      </Link>
+      </a>
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
         {user ? (
           <>

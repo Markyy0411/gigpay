@@ -133,9 +133,10 @@ const LandingPage = () => {
               style={{
                 maxWidth: '550px', width: '100%', position: 'relative',
                 borderTop: `4px solid ${selectedFeature.accentColor}`,
-                boxShadow: `0 25px 50px -12px ${selectedFeature.shadowColor}`
+                boxShadow: `0 25px 50px -12px ${selectedFeature.shadowColor}`,
+                cursor: 'pointer'
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={() => setSelectedFeature(null)}
             >
               <button 
                 onClick={() => setSelectedFeature(null)} 
