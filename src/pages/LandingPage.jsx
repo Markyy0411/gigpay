@@ -36,6 +36,15 @@ const features = [
 const LandingPage = () => {
   const [expandedId, setExpandedId] = React.useState(null);
 
+  const handleCardClick = (id, e) => {
+    setExpandedId(expandedId === id ? null : id);
+    if (expandedId !== id) {
+      setTimeout(() => {
+        e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 150);
+    }
+  };
+
   return (
     <div style={{ paddingTop: '2rem', overflowX: 'hidden' }}>
       
@@ -89,12 +98,12 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Feature Cards Grid */}
-      <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left', marginBottom: '4rem' }}>
+      <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left', marginBottom: '4rem', alignItems: 'flex-start' }}>
         {features.map((feature) => (
           <motion.div 
             layout
             key={feature.id}
-            onClick={() => setExpandedId(expandedId === feature.id ? null : feature.id)}
+            onClick={(e) => handleCardClick(feature.id, e)}
             whileHover={{ y: -10, boxShadow: `0 20px 40px -10px ${feature.shadowColor}` }}
             className="glass-panel"
             style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}
