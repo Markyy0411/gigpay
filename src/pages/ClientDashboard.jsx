@@ -3,6 +3,7 @@ import { PlusCircle, CheckCircle, Clock, ShieldAlert } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { requestWalletSignature } from '../lib/stellar';
 
 const ClientDashboard = () => {
   const { user, publicKey } = useAuth();
@@ -21,24 +22,30 @@ const ClientDashboard = () => {
     setConfirmText('');
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (confirmText !== 'CONFIRM' || !taskToApprove) return;
     setIsTransacting(true);
+    const taskId = taskToApprove;
     setTaskToApprove(null);
-    // Simulate Stellar network transaction delay
-    setTimeout(() => {
-      updateTaskStatus(taskToApprove, 'Completed');
-      setIsTransacting(false);
+    
+    try {
+      await requestWalletSignature(publicKey, "Approve Escrow Release");
+      updateTaskStatus(taskId, 'Completed');
       addToast("Transaction Confirmed! Funds released to freelancer.", "success");
-    }, 2500);
+    } catch (error) {
+      addToast(error.message || "Transaction failed.", "error");
+    } finally {
+      setIsTransacting(false);
+    }
   };
 
-  const handleCreateTask = (e) => {
+  const handleCreateTask = async (e) => {
     e.preventDefault();
     if (!newTaskTitle || !newTaskAmount) return;
     setIsTransacting(true);
     
-    setTimeout(() => {
+    try {
+      await requestWalletSignature(publicKey, `Lock ${newTaskAmount} USDC in Escrow`);
       const newTask = {
         title: newTaskTitle,
         amount: newTaskAmount
@@ -46,9 +53,12 @@ const ClientDashboard = () => {
       addTask(newTask);
       setNewTaskTitle('');
       setNewTaskAmount('');
-      setIsTransacting(false);
       addToast("Task Escrow created successfully!", "success");
-    }, 1500);
+    } catch (error) {
+      addToast(error.message || "Transaction failed.", "error");
+    } finally {
+      setIsTransacting(false);
+    }
   };
 
   return (
@@ -141,6 +151,28 @@ const ClientDashboard = () => {
               <PlusCircle size={18}/> {isTransacting ? 'Locking...' : 'Lock Funds in Escrow'}
             </button>
           </form>
+
+          {/* The GigPay Advantage Widget */}
+          {newTaskAmount && !isNaN(newTaskAmount) && Number(newTaskAmount) > 0 && (
+            <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '0.5rem' }}>
+              <h4 style={{ color: '#4ade80', marginBottom: '0.5rem', fontSize: '0.9rem' }}>✨ The GigPay Advantage</h4>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Upwork Fee (20%):</span>
+                  <span style={{ color: '#ef4444', textDecoration: 'line-through' }}>${(Number(newTaskAmount) * 0.2).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Stellar Network Fee:</span>
+                  <span style={{ color: '#4ade80' }}>$0.0001</span>
+                </div>
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '0.25rem 0' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white', fontWeight: 'bold' }}>
+                  <span>Total Savings:</span>
+                  <span>${(Number(newTaskAmount) * 0.2 - 0.0001).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
