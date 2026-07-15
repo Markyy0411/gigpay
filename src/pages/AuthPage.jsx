@@ -162,7 +162,7 @@ const AuthPage = () => {
             </div>
           )}
 
-          <SlideToVerify onVerify={setIsVerified} />
+          <SlideToVerify key={isLogin ? 'login' : 'signup'} onVerify={setIsVerified} />
 
           <button 
             type="submit" 
