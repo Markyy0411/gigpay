@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { Zap } from 'lucide-react';
+import SlideToVerify from '../components/SlideToVerify';
 
 const AuthPage = () => {
   const { signIn, signUp } = useAuth();
@@ -12,11 +13,22 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('client');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const processSubmit = async () => {
+    if (!isVerified) {
+      addToast("Please complete the human verification.", "error");
+      return;
+    }
+    
+    if (!isLogin && password !== confirmPassword) {
+      addToast("Passwords do not match.", "error");
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -28,7 +40,10 @@ const AuthPage = () => {
       } else {
         const data = await signUp(email, password, { role });
         addToast("Account created successfully! Please check your email to verify your account before logging in.", "success");
-        setIsLogin(true); // switch to login mode so they can log in, or redirect if auto-login
+        setIsLogin(true); // switch to login mode
+        setIsVerified(false); // require re-verification for login
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (error) {
       if (error.message.includes('Email not confirmed')) {
@@ -40,6 +55,22 @@ const AuthPage = () => {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    processSubmit();
+  };
+
+  // Premium Automation: Auto-Login Debounce Hook
+  useEffect(() => {
+    if (isLogin && email && password.length >= 6 && isVerified && !isLoading) {
+      const timeoutId = setTimeout(() => {
+        processSubmit();
+      }, 1000); // Trigger auto-login after 1s of inactivity
+      return () => clearTimeout(timeoutId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, password, isVerified, isLogin]);
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh' }}>
@@ -74,6 +105,20 @@ const AuthPage = () => {
               required
             />
           </div>
+
+          {!isLogin && (
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Confirm Password</label>
+              <input 
+                type="password" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••" 
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)', color: 'white' }} 
+                required
+              />
+            </div>
+          )}
           
           {!isLogin && (
             <div>
@@ -117,11 +162,13 @@ const AuthPage = () => {
             </div>
           )}
 
+          <SlideToVerify onVerify={setIsVerified} />
+
           <button 
             type="submit" 
             className="btn btn-primary" 
-            style={{ marginTop: '1rem', opacity: isLoading ? 0.7 : 1 }}
-            disabled={isLoading}
+            style={{ marginTop: '1rem', opacity: isLoading || !isVerified ? 0.5 : 1 }}
+            disabled={isLoading || !isVerified}
           >
             {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
@@ -130,7 +177,10 @@ const AuthPage = () => {
         <div style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button 
-            onClick={() => setIsLogin(!isLogin)} 
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setIsVerified(false); // Reset verification on toggle
+            }} 
             style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
           >
             {isLogin ? 'Sign Up' : 'Sign In'}
