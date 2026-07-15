@@ -41,6 +41,7 @@ Our vision is a world where anyone, anywhere, can work freely and get paid their
 
 - **Network:** Stellar Testnet
 - **Contract Address:** `CBRTDAFRUCLVRVYTDMRYM26RPMXC67VO7VMY7ZNVBBR2NVARLOF2KYMH`
+- **Deployer Wallet Address:** `GAATY4U2IOYKFY2IAZ3W5VRZQME4UD2Z3TAVLOE5ONEICGXZX7HRX7D3`
 - **Source Code Location:** `/contracts/gigpay_escrow/src/lib.rs` (Note: mocked for frontend integration via Freighter wallet signatures).
 
 ## 🚀 Running Locally
