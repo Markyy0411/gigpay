@@ -3,7 +3,39 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Zap, DollarSign, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const features = [
+  {
+    id: 1,
+    icon: <Zap size={36} color="#00f2fe" style={{ marginBottom: '1.5rem' }} />,
+    bgIcon: <Zap size={100} />,
+    title: "Lightning Fast",
+    shortDesc: "Powered by Stellar network, payments settle in under 5 seconds cross-border, directly to your wallet.",
+    longDesc: "When a client approves your work, you don't want to wait a week for a bank wire. Using the Stellar network consensus protocol, GigPay settles international payments in 3-5 seconds. By leveraging USDC, you bypass traditional banking hours, FX fees, and SWIFT delays.",
+    shadowColor: "rgba(59,130,246,0.3)"
+  },
+  {
+    id: 2,
+    icon: <DollarSign size={36} color="var(--accent)" style={{ marginBottom: '1.5rem' }} />,
+    bgIcon: <DollarSign size={100} />,
+    title: "Near-Zero Fees",
+    shortDesc: "Stop giving 20% to traditional platforms. Keep exactly what you earn with fraction-of-a-cent fees.",
+    longDesc: "Traditional gig platforms tax your hard work by taking up to 20% of your earnings. GigPay is a decentralized protocol, meaning there is no corporate middleman taking a cut. The only fee is the Stellar network transaction fee, which is a fraction of a cent.",
+    shadowColor: "rgba(16,185,129,0.3)"
+  },
+  {
+    id: 3,
+    icon: <ShieldCheck size={36} color="#c084fc" style={{ marginBottom: '1.5rem' }} />,
+    bgIcon: <ShieldCheck size={100} />,
+    title: "Smart Escrow",
+    shortDesc: "Funds are locked safely in a Soroban smart contract until the work is verified and approved.",
+    longDesc: "Trust is the biggest barrier in freelance work. Our Soroban smart contracts ensure clients must fund the escrow before you start working. Once the funds are locked on-chain, you have a cryptographic guarantee that you will be paid upon approval.",
+    shadowColor: "rgba(192,132,252,0.3)"
+  }
+];
+
 const LandingPage = () => {
+  const [expandedId, setExpandedId] = React.useState(null);
+
   return (
     <div style={{ paddingTop: '2rem', overflowX: 'hidden' }}>
       
@@ -57,42 +89,35 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Feature Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left', marginBottom: '4rem' }}>
-        
-        <motion.div 
-          whileHover={{ y: -10, boxShadow: '0 20px 40px -10px rgba(59,130,246,0.3)' }}
-          className="glass-panel"
-          style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)' }}
-        >
-          <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}><Zap size={100} /></div>
-          <Zap size={36} color="#00f2fe" style={{ marginBottom: '1.5rem' }} />
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Lightning Fast</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Powered by Stellar network, payments settle in under 5 seconds cross-border, directly to your wallet.</p>
-        </motion.div>
-
-        <motion.div 
-          whileHover={{ y: -10, boxShadow: '0 20px 40px -10px rgba(16,185,129,0.3)' }}
-          className="glass-panel"
-          style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)' }}
-        >
-          <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}><DollarSign size={100} /></div>
-          <DollarSign size={36} color="var(--accent)" style={{ marginBottom: '1.5rem' }} />
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Near-Zero Fees</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Stop giving 20% to traditional platforms. Keep exactly what you earn with fraction-of-a-cent fees.</p>
-        </motion.div>
-
-        <motion.div 
-          whileHover={{ y: -10, boxShadow: '0 20px 40px -10px rgba(192,132,252,0.3)' }}
-          className="glass-panel"
-          style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)' }}
-        >
-          <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}><ShieldCheck size={100} /></div>
-          <ShieldCheck size={36} color="#c084fc" style={{ marginBottom: '1.5rem' }} />
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Smart Escrow</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Funds are locked safely in a Soroban smart contract until the work is verified and approved.</p>
-        </motion.div>
-
-      </div>
+      <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left', marginBottom: '4rem' }}>
+        {features.map((feature) => (
+          <motion.div 
+            layout
+            key={feature.id}
+            onClick={() => setExpandedId(expandedId === feature.id ? null : feature.id)}
+            whileHover={{ y: -10, boxShadow: `0 20px 40px -10px ${feature.shadowColor}` }}
+            className="glass-panel"
+            style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}
+          >
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}>{feature.bgIcon}</div>
+            <motion.div layout>{feature.icon}</motion.div>
+            <motion.h3 layout style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{feature.title}</motion.h3>
+            <motion.p layout style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{feature.shortDesc}</motion.p>
+            
+            {expandedId === feature.id && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                <p style={{ color: 'white', fontSize: '0.95rem', lineHeight: 1.6 }}>{feature.longDesc}</p>
+              </motion.div>
+            )}
+          </motion.div>
+        ))}
+      </motion.div>
       
     </div>
   );
