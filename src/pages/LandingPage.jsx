@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Zap, DollarSign, Globe2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowRight, ShieldCheck, Zap, DollarSign } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const features = [
   {
@@ -11,16 +11,18 @@ const features = [
     title: "Lightning Fast",
     shortDesc: "Powered by Stellar network, payments settle in under 5 seconds cross-border, directly to your wallet.",
     longDesc: "When a client approves your work, you don't want to wait a week for a bank wire. Using the Stellar network consensus protocol, GigPay settles international payments in 3-5 seconds. By leveraging USDC, you bypass traditional banking hours, FX fees, and SWIFT delays.",
-    shadowColor: "rgba(59,130,246,0.3)"
+    shadowColor: "rgba(59,130,246,0.3)",
+    accentColor: "#00f2fe"
   },
   {
     id: 2,
-    icon: <DollarSign size={36} color="var(--accent)" style={{ marginBottom: '1.5rem' }} />,
+    icon: <DollarSign size={36} color="#4ade80" style={{ marginBottom: '1.5rem' }} />,
     bgIcon: <DollarSign size={100} />,
     title: "Near-Zero Fees",
     shortDesc: "Stop giving 20% to traditional platforms. Keep exactly what you earn with fraction-of-a-cent fees.",
     longDesc: "Traditional gig platforms tax your hard work by taking up to 20% of your earnings. GigPay is a decentralized protocol, meaning there is no corporate middleman taking a cut. The only fee is the Stellar network transaction fee, which is a fraction of a cent.",
-    shadowColor: "rgba(16,185,129,0.3)"
+    shadowColor: "rgba(74,222,128,0.3)",
+    accentColor: "#4ade80"
   },
   {
     id: 3,
@@ -29,21 +31,13 @@ const features = [
     title: "Smart Escrow",
     shortDesc: "Funds are locked safely in a Soroban smart contract until the work is verified and approved.",
     longDesc: "Trust is the biggest barrier in freelance work. Our Soroban smart contracts ensure clients must fund the escrow before you start working. Once the funds are locked on-chain, you have a cryptographic guarantee that you will be paid upon approval.",
-    shadowColor: "rgba(192,132,252,0.3)"
+    shadowColor: "rgba(192,132,252,0.3)",
+    accentColor: "#c084fc"
   }
 ];
 
 const LandingPage = () => {
-  const [expandedId, setExpandedId] = React.useState(null);
-
-  const handleCardClick = (id, e) => {
-    setExpandedId(expandedId === id ? null : id);
-    if (expandedId !== id) {
-      setTimeout(() => {
-        e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 150);
-    }
-  };
+  const [selectedFeature, setSelectedFeature] = useState(null);
 
   return (
     <div style={{ paddingTop: '2rem', overflowX: 'hidden' }}>
@@ -98,35 +92,78 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Feature Cards Grid */}
-      <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left', marginBottom: '4rem', alignItems: 'flex-start' }}>
+      <motion.div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left', marginBottom: '4rem' }}>
         {features.map((feature) => (
           <motion.div 
-            layout
             key={feature.id}
-            onClick={(e) => handleCardClick(feature.id, e)}
-            whileHover={{ y: -10, boxShadow: `0 20px 40px -10px ${feature.shadowColor}` }}
+            onClick={() => setSelectedFeature(feature)}
+            whileHover={{ y: -10, scale: 1.02, boxShadow: `0 20px 40px -10px ${feature.shadowColor}` }}
+            whileTap={{ scale: 0.98 }}
             className="glass-panel"
-            style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}
+            style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', height: '100%' }}
           >
-            <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}>{feature.bgIcon}</div>
-            <motion.div layout>{feature.icon}</motion.div>
-            <motion.h3 layout style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{feature.title}</motion.h3>
-            <motion.p layout style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{feature.shortDesc}</motion.p>
-            
-            {expandedId === feature.id && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}
-              >
-                <p style={{ color: 'white', fontSize: '0.95rem', lineHeight: 1.6 }}>{feature.longDesc}</p>
-              </motion.div>
-            )}
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1, pointerEvents: 'none' }}>{feature.bgIcon}</div>
+            <div>{feature.icon}</div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{feature.title}</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{feature.shortDesc}</p>
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Trendy Feature Modal */}
+      <AnimatePresence>
+        {selectedFeature && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+              zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+            }}
+            onClick={() => setSelectedFeature(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="glass-panel"
+              style={{
+                maxWidth: '550px', width: '100%', position: 'relative',
+                borderTop: `4px solid ${selectedFeature.accentColor}`,
+                boxShadow: `0 25px 50px -12px ${selectedFeature.shadowColor}`
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setSelectedFeature(null)} 
+                style={{ position: 'absolute', top: '1rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '2rem', lineHeight: 1 }}
+              >
+                &times;
+              </button>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '50%' }}>
+                  {React.cloneElement(selectedFeature.icon, { style: { marginBottom: 0 } })}
+                </div>
+                <h2 style={{ fontSize: '2rem', margin: 0 }}>{selectedFeature.title}</h2>
+              </div>
+              
+              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                {selectedFeature.shortDesc}
+              </p>
+              
+              <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <p style={{ color: 'white', lineHeight: 1.7, fontSize: '1.05rem', margin: 0 }}>
+                  {selectedFeature.longDesc}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
     </div>
   );
