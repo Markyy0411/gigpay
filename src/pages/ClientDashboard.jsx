@@ -9,7 +9,7 @@ const ClientDashboard = () => {
   const { user, publicKey } = useAuth();
   const { tasks, isLoading, addTask, updateTaskStatus } = useTasks();
   const { addToast } = useToast();
-  const clientTasks = tasks.filter(t => t.client_id === user?.id && t.status !== 'Available');
+  const clientTasks = tasks.filter(t => t.client_id === user?.id);
   
   const [isTransacting, setIsTransacting] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
