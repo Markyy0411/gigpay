@@ -29,8 +29,7 @@ const ClientDashboard = () => {
     setTaskToApprove(null);
     
     try {
-      await requestWalletSignature(publicKey, "Approve Escrow Release");
-      updateTaskStatus(taskId, 'Completed');
+      await updateTaskStatus(taskId, 'Completed');
       addToast("Transaction Confirmed! Funds released to freelancer.", "success");
     } catch (error) {
       addToast(error.message || "Transaction failed.", "error");
@@ -45,7 +44,6 @@ const ClientDashboard = () => {
     setIsTransacting(true);
     
     try {
-      await requestWalletSignature(publicKey, `Lock ${newTaskAmount} USDC in Escrow`);
       const newTask = {
         title: newTaskTitle,
         amount: newTaskAmount

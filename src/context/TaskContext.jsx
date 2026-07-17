@@ -87,6 +87,7 @@ export const TaskProvider = ({ children }) => {
       // Realtime listener handles the state update
     } catch (err) {
       console.error("Failed to add task to Supabase:", err);
+      throw err;
     }
   };
 
@@ -117,6 +118,7 @@ export const TaskProvider = ({ children }) => {
       // Realtime listener handles the state update
     } catch (err) {
       console.error("Failed to update task in Supabase:", err);
+      throw err;
     }
   };
 
