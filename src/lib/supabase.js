@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Using Vite Proxy to completely bypass Windows Antivirus!
-const supabaseUrl = '/api/supabase';
+// Strictly hardcoded for demo day to bypass Vercel caching
+const supabaseUrl = 'https://gulshfticoirrpuohdxk.supabase.co';
 const supabaseAnonKey = 'sb_publishable_uimxpjAcUVlf4mqite3pZg_zhrrzy3Y';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
