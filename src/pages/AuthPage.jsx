@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { Zap } from 'lucide-react';
-import SlideToVerify from '../components/SlideToVerify';
 
 const AuthPage = () => {
   const { signIn, signUp } = useAuth();
@@ -16,14 +15,8 @@ const AuthPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('client');
   const [isLoading, setIsLoading] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
 
   const processSubmit = async () => {
-    if (!isVerified) {
-      addToast("Please complete the human verification.", "error");
-      return;
-    }
-    
     if (!isLogin && password !== confirmPassword) {
       addToast("Passwords do not match.", "error");
       return;
@@ -41,15 +34,14 @@ const AuthPage = () => {
         const data = await signUp(email, password, { role });
         addToast("Account created successfully! Please check your email to verify your account before logging in.", "success");
         setIsLogin(true); // switch to login mode
-        setIsVerified(false); // require re-verification for login
         setPassword('');
         setConfirmPassword('');
       }
     } catch (error) {
-      if (error.message.includes('Email not confirmed')) {
+      if (error?.message?.includes('Email not confirmed')) {
         addToast("Please check your email and click the confirmation link before logging in.", "error");
       } else {
-        addToast(error.message || "An error occurred.", "error");
+        addToast(error?.message || "An error occurred.", "error");
       }
     } finally {
       setIsLoading(false);
@@ -60,17 +52,6 @@ const AuthPage = () => {
     e.preventDefault();
     processSubmit();
   };
-
-  // Premium Automation: Auto-Login Debounce Hook
-  useEffect(() => {
-    if (isLogin && email && password.length >= 6 && isVerified && !isLoading) {
-      const timeoutId = setTimeout(() => {
-        processSubmit();
-      }, 1000); // Trigger auto-login after 1s of inactivity
-      return () => clearTimeout(timeoutId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, password, isVerified, isLogin]);
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh' }}>
@@ -162,13 +143,11 @@ const AuthPage = () => {
             </div>
           )}
 
-          <SlideToVerify key={isLogin ? 'login' : 'signup'} onVerify={setIsVerified} />
-
           <button 
             type="submit" 
             className="btn btn-primary" 
-            style={{ marginTop: '1rem', opacity: isLoading || !isVerified ? 0.5 : 1 }}
-            disabled={isLoading || !isVerified}
+            style={{ marginTop: '1rem', opacity: isLoading ? 0.5 : 1 }}
+            disabled={isLoading}
           >
             {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
@@ -179,7 +158,6 @@ const AuthPage = () => {
           <button 
             onClick={() => {
               setIsLogin(!isLogin);
-              setIsVerified(false); // Reset verification on toggle
             }} 
             style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
           >
