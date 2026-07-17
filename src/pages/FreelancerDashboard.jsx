@@ -132,26 +132,27 @@ const FreelancerDashboard = () => {
           <p style={{ color: 'var(--text-muted)' }}>No tasks available right now.</p>
         ) : null}
         {!isLoading && availableTasks.map(task => (
-          <div key={task.id} className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-            <div>
-              <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
+          <div key={task.id} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+              <div>
+                <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>${task.amount} USDC Locked</div>
+                  <button 
+                    className="btn btn-outline" 
+                    style={{ padding: '0.5rem 1rem', opacity: !publicKey || isAccepting ? 0.5 : 1 }} 
+                    onClick={() => handleAcceptWork(task.id, task.amount)}
+                    disabled={!publicKey || isAccepting}
+                    title={!publicKey ? "Connect wallet to accept work" : ""}
+                  >
+                    {isAccepting ? 'Signing...' : <>Accept Work <ArrowUpRight size={16} /></>}
+                  </button>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>${task.amount} USDC Locked</div>
-                <button 
-                  className="btn btn-outline" 
-                  style={{ padding: '0.5rem 1rem', opacity: !publicKey || isAccepting ? 0.5 : 1 }} 
-                  onClick={() => handleAcceptWork(task.id, task.amount)}
-                  disabled={!publicKey || isAccepting}
-                  title={!publicKey ? "Connect wallet to accept work" : ""}
-                >
-                  {isAccepting ? 'Signing...' : <>Accept Work <ArrowUpRight size={16} /></>}
-                </button>
-            </div>
+            <TaskProgress status={task.status} />
           </div>
-          <TaskProgress status={task.status} />
-        </div>
         ))}
       </div>
 
@@ -160,21 +161,22 @@ const FreelancerDashboard = () => {
           <h3 style={{ marginTop: '3rem', marginBottom: '1.5rem' }}>Your Active Jobs</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {acceptedTasks.map(task => (
-              <div key={task.id} className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-                <div>
-                  <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
+              <div key={task.id} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{task.title}</h4>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ fontWeight: 'bold', color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)' }}>${task.amount} USDC Locked</div>
+                    <span style={{ color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                      {task.status === 'Disputed' ? <ShieldAlert size={18} /> : <CheckCircle size={18} />} 
+                      {task.status === 'Disputed' ? 'Disputed' : 'In Progress'}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                  <div style={{ fontWeight: 'bold', color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)' }}>${task.amount} USDC Locked</div>
-                  <span style={{ color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                    {task.status === 'Disputed' ? <ShieldAlert size={18} /> : <CheckCircle size={18} />} 
-                    {task.status === 'Disputed' ? 'Disputed' : 'In Progress'}
-                  </span>
-                </div>
+                <TaskProgress status={task.status} />
               </div>
-              <TaskProgress status={task.status} />
-            </div>
             ))}
           </div>
         </>
