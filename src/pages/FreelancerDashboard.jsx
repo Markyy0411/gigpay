@@ -4,13 +4,14 @@ import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { requestWalletSignature } from '../lib/stellar';
+import TaskProgress from '../components/TaskProgress';
 
 const FreelancerDashboard = () => {
   const { user, publicKey } = useAuth();
   const { tasks, isLoading, updateTaskStatus } = useTasks();
   const { addToast } = useToast();
   const availableTasks = tasks.filter(t => t.status === 'Available');
-  const acceptedTasks = tasks.filter(t => t.status === 'In Progress' && t.freelancer_id === user?.id);
+  const acceptedTasks = tasks.filter(t => (t.status === 'In Progress' || t.status === 'Disputed') && t.freelancer_id === user?.id);
   const completedTasks = tasks.filter(t => t.status === 'Completed' && t.freelancer_id === user?.id);
   
   const totalEarned = completedTasks.reduce((sum, task) => sum + Number(task.amount), 0);
@@ -122,6 +123,8 @@ const FreelancerDashboard = () => {
                 </button>
             </div>
           </div>
+          <TaskProgress status={task.status} />
+        </div>
         ))}
       </div>
 
@@ -136,12 +139,15 @@ const FreelancerDashboard = () => {
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Client: {task.client_id ? task.client_id.slice(0, 8) + '...' : 'Unknown'}</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                  <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>${task.amount} USDC Locked</div>
-                  <span style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                    <CheckCircle size={18} /> In Progress
+                  <div style={{ fontWeight: 'bold', color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)' }}>${task.amount} USDC Locked</div>
+                  <span style={{ color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                    {task.status === 'Disputed' ? <ShieldAlert size={18} /> : <CheckCircle size={18} />} 
+                    {task.status === 'Disputed' ? 'Disputed' : 'In Progress'}
                   </span>
                 </div>
               </div>
+              <TaskProgress status={task.status} />
+            </div>
             ))}
           </div>
         </>

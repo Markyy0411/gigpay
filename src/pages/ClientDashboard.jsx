@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { PlusCircle, CheckCircle, Clock, ShieldAlert } from 'lucide-react';
+import { PlusCircle, CheckCircle, Clock, ShieldAlert, AlertTriangle, Sparkles, ExternalLink } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { requestWalletSignature } from '../lib/stellar';
+import TaskProgress from '../components/TaskProgress';
 
 const ClientDashboard = () => {
   const { user, publicKey } = useAuth();
@@ -16,10 +17,40 @@ const ClientDashboard = () => {
   const [newTaskAmount, setNewTaskAmount] = useState('');
   const [taskToApprove, setTaskToApprove] = useState(null);
   const [confirmText, setConfirmText] = useState('');
+  const [isEstimating, setIsEstimating] = useState(false);
 
   const initiateApproval = (id) => {
     setTaskToApprove(id);
     setConfirmText('');
+  };
+
+  const handleDispute = async (id) => {
+    try {
+      await updateTaskStatus(id, 'Disputed');
+      addToast("Task has been disputed. Funds are frozen until arbitration resolves.", "success");
+    } catch (error) {
+      addToast("Failed to raise dispute.", "error");
+    }
+  };
+
+  const simulateAIEstimate = () => {
+    if (!newTaskTitle) {
+      addToast("Please enter a task title first so AI can analyze it.", "error");
+      return;
+    }
+    setIsEstimating(true);
+    setTimeout(() => {
+      // Simple mock logic based on words
+      const words = newTaskTitle.toLowerCase();
+      let est = 100;
+      if (words.includes('website') || words.includes('app')) est = 1000;
+      if (words.includes('logo') || words.includes('design')) est = 300;
+      if (words.includes('smart contract') || words.includes('blockchain')) est = 2500;
+      
+      setNewTaskAmount(est.toString());
+      setIsEstimating(false);
+      addToast(`AI estimated a fair market rate of $${est} USDC for this task.`, "success");
+    }, 1500);
   };
 
   const handleApprove = async () => {
@@ -79,33 +110,54 @@ const ClientDashboard = () => {
             <p style={{ color: 'var(--text-muted)' }}>No active tasks.</p>
           ) : null}
           {!isLoading && clientTasks.map(task => (
-            <div key={task.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <div>
-                <h3 style={{ marginBottom: '0.25rem' }}>{task.title}</h3>
-                <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <Clock size={14} /> {task.status}
-                  </span>
-                  <span>Freelancer: {task.freelancer_id ? task.freelancer_id.slice(0, 8) + '...' : 'Unassigned'}</span>
+            <div key={task.id} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ marginBottom: '0.25rem', color: task.status === 'Disputed' ? '#ef4444' : 'white' }}>{task.title}</h3>
+                  <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Clock size={14} /> {task.status}
+                    </span>
+                    <span>Freelancer: {task.freelancer_id ? task.freelancer_id.slice(0, 8) + '...' : 'Unassigned'}</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: task.status === 'Disputed' ? '#ef4444' : 'var(--accent)' }}>
+                    ${task.amount} USDC
+                  </div>
+                  
+                  {task.status === 'In Progress' && (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        className="btn btn-outline" 
+                        onClick={() => handleDispute(task.id)}
+                        disabled={isTransacting}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}
+                        title="Freeze funds and request arbitration"
+                      >
+                        <AlertTriangle size={14} /> Dispute
+                      </button>
+                      <button 
+                        className="btn btn-outline" 
+                        onClick={() => initiateApproval(task.id)}
+                        disabled={isTransacting}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: 'var(--accent)', color: 'var(--accent)', opacity: isTransacting ? 0.5 : 1 }}
+                      >
+                        <CheckCircle size={14} /> {isTransacting ? 'Processing...' : 'Approve & Pay'}
+                      </button>
+                    </div>
+                  )}
+                  {task.status === 'Completed' && (
+                    <a href="https://stellar.expert/explorer/testnet" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
+                      Tx: 9a2f...88c <ExternalLink size={12} />
+                    </a>
+                  )}
+                  {task.status === 'Disputed' && (
+                    <span style={{ color: '#ef4444', fontSize: '0.9rem', fontWeight: 'bold' }}>Awaiting Arbitration</span>
+                  )}
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--accent)', marginBottom: '0.5rem' }}>
-                  ${task.amount} USDC
-                </div>
-                {task.status === 'In Progress' ? (
-                  <button 
-                    className="btn btn-outline" 
-                    onClick={() => initiateApproval(task.id)}
-                    disabled={isTransacting}
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', borderColor: 'var(--accent)', color: 'var(--accent)', opacity: isTransacting ? 0.5 : 1 }}
-                  >
-                    <CheckCircle size={14} /> {isTransacting ? 'Processing...' : 'Approve & Pay'}
-                  </button>
-                ) : (
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Paid</span>
-                )}
-              </div>
+              <TaskProgress status={task.status} />
             </div>
           ))}
         </div>
@@ -126,7 +178,17 @@ const ClientDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Amount (USDC)</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.5rem' }}>
+                <label style={{ color: 'var(--text-muted)' }}>Amount (USDC)</label>
+                <button 
+                  type="button" 
+                  onClick={simulateAIEstimate}
+                  disabled={isEstimating}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}
+                >
+                  <Sparkles size={12} /> {isEstimating ? 'Estimating...' : 'AI Estimate'}
+                </button>
+              </div>
               <input 
                 type="number" 
                 placeholder="100" 
