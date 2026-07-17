@@ -22,8 +22,7 @@ export const connectWallet = async () => {
     const connected = await withTimeout(isConnected(), 2000);
     
     if (!connected) {
-      console.warn("Freighter not detected. Activating Demo Fallback Mode.");
-      return { publicKey: DEMO_PUBLIC_KEY, network: 'TESTNET' };
+      throw new Error("WALLET_NOT_INSTALLED");
     }
 
     let allowed = await withTimeout(isAllowed(), 2000);
@@ -44,6 +43,9 @@ export const connectWallet = async () => {
       network: network,
     };
   } catch (error) {
+    if (error.message === 'WALLET_NOT_INSTALLED') {
+      throw error; // Let the UI handle onboarding for missing wallets
+    }
     console.error("Freighter Extension blocked/frozen. Activating Demo Fallback Mode.", error);
     // Silent fallback ensures the presentation NEVER fails, even if the browser breaks
     return { publicKey: DEMO_PUBLIC_KEY, network: 'TESTNET' };

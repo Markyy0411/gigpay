@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, ShieldAlert, LogOut, User } from 'lucide-react';
+import { Zap, ShieldAlert, LogOut, User, Download, Globe, Shield, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const { user, signOut, publicKey, connectWallet } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -18,7 +19,11 @@ const Navbar = () => {
     try {
       await connectWallet();
     } catch (err) {
-      setError(err.message);
+      if (err.message === 'WALLET_NOT_INSTALLED') {
+        setShowOnboardingModal(true);
+      } else {
+        setError(err.message);
+      }
     }
   };
 
@@ -85,6 +90,69 @@ const Navbar = () => {
       {error && (
         <div style={{ width: '100%', marginTop: '1rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '0.5rem', border: '1px solid #ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
           <ShieldAlert size={16} /> {error}
+        </div>
+      )}
+
+      {/* Wallet Onboarding Modal */}
+      {showOnboardingModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, backdropFilter: 'blur(8px)' }}>
+          <div className="glass-panel animate-fade-in" style={{ width: '90%', maxWidth: '500px', padding: '2.5rem', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', color: 'var(--accent)' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.2)', padding: '0.75rem', borderRadius: '1rem' }}>
+                <Wallet size={32} />
+              </div>
+              <h2 style={{ margin: 0, color: 'white' }}>Welcome to Web3</h2>
+            </div>
+            
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
+              GigPay uses the Stellar Blockchain to process payments instantly with zero fees. To use this app, you need a secure digital wallet.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ color: 'var(--accent)', marginTop: '0.25rem' }}><Download size={20} /></div>
+                <div>
+                  <h4 style={{ marginBottom: '0.25rem', color: 'white' }}>1. Download Freighter</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Install the official Stellar wallet extension for Chrome, Edge, or Firefox.</p>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ color: 'var(--accent)', marginTop: '0.25rem' }}><Shield size={20} /></div>
+                <div>
+                  <h4 style={{ marginBottom: '0.25rem', color: 'white' }}>2. Secure Your Account</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Create a password and safely write down your 12-word recovery phrase.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ color: 'var(--accent)', marginTop: '0.25rem' }}><Globe size={20} /></div>
+                <div>
+                  <h4 style={{ marginBottom: '0.25rem', color: 'white' }}>3. Switch to Testnet</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Click the gear icon in Freighter and switch your network to "Testnet".</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <a 
+                href="https://www.freighter.app/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+              >
+                Download Freighter <ExternalLink size={16} />
+              </a>
+              <button 
+                onClick={() => setShowOnboardingModal(false)}
+                className="btn btn-outline"
+                style={{ flex: 1, borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+              >
+                I'll do it later
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </nav>
