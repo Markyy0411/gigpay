@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, ArrowUpRight, CheckCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Wallet, ArrowUpRight, CheckCircle, ShieldAlert, ShieldCheck, Landmark } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,18 @@ const FreelancerDashboard = () => {
   const [showKycModal, setShowKycModal] = useState(false);
   const [isKycVerified, setIsKycVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  
+  // New Bank Off-ramp State
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+
+  const banks = [
+    { id: 'unionbank', name: 'UnionBank (PH)' },
+    { id: 'gcash', name: 'GCash' },
+    { id: 'dbs', name: 'DBS Bank' },
+    { id: 'revolut', name: 'Revolut' }
+  ];
 
   const handleAcceptWork = async (id, amount) => {
     setIsAccepting(true);
@@ -46,10 +58,25 @@ const FreelancerDashboard = () => {
       return;
     }
 
+    // Instead of withdrawing instantly, open bank selection
+    setShowBankModal(true);
+  };
+
+  const handleConfirmWithdraw = async () => {
+    if (!selectedBank || !accountNumber) {
+      addToast("Please select a bank and enter an account number.", "error");
+      return;
+    }
+
     setIsWithdrawing(true);
     try {
-      await requestWalletSignature(publicKey, `Withdraw $${totalEarned} USDC from Escrow`);
-      addToast(`Successfully withdrawn $${totalEarned} USDC to your local bank account.`, "success");
+      await requestWalletSignature(publicKey, `Withdraw $${totalEarned} USDC from Escrow to ${selectedBank}`);
+      const bankName = banks.find(b => b.id === selectedBank)?.name || selectedBank;
+      const last4 = accountNumber.slice(-4) || '1234';
+      addToast(`Successfully converted & transferred $${totalEarned} USDC to ${bankName} account ending in ****${last4}.`, "success");
+      setShowBankModal(false);
+      setSelectedBank('');
+      setAccountNumber('');
     } catch (error) {
       addToast(error.message || "Withdrawal signature failed.", "error");
     } finally {
@@ -182,6 +209,77 @@ const FreelancerDashboard = () => {
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bank Selection Off-Ramp Modal */}
+      {showBankModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(5px)' }}>
+          <div className="glass-panel" style={{ width: '450px', padding: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', color: 'var(--accent)' }}>
+              <Landmark size={28} />
+              <h3 style={{ margin: 0, color: 'white' }}>Select Off-Ramp Destination</h3>
+            </div>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Convert and withdraw your ${totalEarned} USDC directly to your local bank account.
+            </p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              {banks.map(bank => (
+                <button
+                  key={bank.id}
+                  onClick={() => setSelectedBank(bank.id)}
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    border: `1px solid ${selectedBank === bank.id ? 'var(--accent)' : 'var(--border)'}`,
+                    backgroundColor: selectedBank === bank.id ? 'rgba(99, 102, 241, 0.1)' : 'rgba(0,0,0,0.2)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'center',
+                    fontWeight: selectedBank === bank.id ? 'bold' : 'normal'
+                  }}
+                >
+                  {bank.name}
+                </button>
+              ))}
+            </div>
+
+            {selectedBank && (
+              <div style={{ marginBottom: '1.5rem', animation: 'fadeIn 0.3s ease-in-out' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  Account Number
+                </label>
+                <input 
+                  type="text" 
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  placeholder="e.g. 1093 4293 4810"
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(0,0,0,0.4)', color: 'white' }} 
+                />
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => { setShowBankModal(false); setSelectedBank(''); setAccountNumber(''); }}
+                disabled={isWithdrawing}
+                style={{ flex: 1, borderColor: 'var(--text-muted)', color: 'var(--text-muted)' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleConfirmWithdraw}
+                disabled={isWithdrawing || !selectedBank || !accountNumber}
+                style={{ flex: 2, opacity: isWithdrawing || !selectedBank || !accountNumber ? 0.5 : 1 }}
+              >
+                {isWithdrawing ? 'Processing Transfer...' : 'Confirm Transfer'}
+              </button>
+            </div>
           </div>
         </div>
       )}
