@@ -43,6 +43,25 @@ const Navbar = () => {
               <Link to="/freelancer" className="btn btn-outline">Freelancer Portal</Link>
             )}
             
+            {/* Visual Role Badge for Demo Clarity */}
+            {user.user_metadata?.role && (
+              <span style={{
+                background: user.user_metadata.role === 'client' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(139, 92, 246, 0.15)',
+                color: user.user_metadata.role === 'client' ? '#60a5fa' : '#a78bfa',
+                padding: '0.3rem 0.8rem',
+                borderRadius: '999px',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                border: `1px solid ${user.user_metadata.role === 'client' ? 'rgba(59, 130, 246, 0.5)' : 'rgba(139, 92, 246, 0.5)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                boxShadow: `0 0 10px ${user.user_metadata.role === 'client' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(139, 92, 246, 0.2)'}`
+              }}>
+                {user.user_metadata.role}
+              </span>
+            )}
             {publicKey ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--accent)' }}>
                 <span style={{ width: '8px', height: '8px', background: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }}></span>
