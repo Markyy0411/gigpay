@@ -128,8 +128,8 @@ const Navbar = () => {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ color: 'var(--accent)', marginTop: '0.25rem' }}><Globe size={20} /></div>
                 <div>
-                  <h4 style={{ marginBottom: '0.25rem', color: 'white' }}>3. Switch to Testnet</h4>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Click the gear icon in Freighter and switch your network to "Testnet".</p>
+                  <h4 style={{ marginBottom: '0.25rem', color: 'white' }}>3. Switch to {import.meta.env.VITE_STELLAR_NETWORK || 'TESTNET'}</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Click the gear icon in Freighter and switch your network to "{import.meta.env.VITE_STELLAR_NETWORK || 'TESTNET'}".</p>
                 </div>
               </div>
             </div>

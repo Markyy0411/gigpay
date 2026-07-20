@@ -12,6 +12,10 @@ const withTimeout = (promise, ms) => {
 // A simulated public key used exclusively if the real wallet fails to load
 const DEMO_PUBLIC_KEY = 'GBDEMO_GIGPAY_WALLET_FALLBACK_ACTIVE_V9XQ3P';
 
+const NETWORK = import.meta.env.VITE_STELLAR_NETWORK || 'TESTNET';
+const HORIZON_URL = NETWORK === 'MAINNET' ? "https://horizon.stellar.org" : "https://horizon-testnet.stellar.org";
+const PASSPHRASE = NETWORK === 'MAINNET' ? StellarSdk.Networks.PUBLIC : StellarSdk.Networks.TESTNET;
+
 /**
  * Checks if the user has Freighter installed and connected.
  * If Freighter is broken or blocked, it instantly falls back to a Demo Mode.
@@ -48,7 +52,7 @@ export const connectWallet = async () => {
     }
     console.error("Freighter Extension blocked/frozen. Activating Demo Fallback Mode.", error);
     // Silent fallback ensures the presentation NEVER fails, even if the browser breaks
-    return { publicKey: DEMO_PUBLIC_KEY, network: 'TESTNET' };
+    return { publicKey: DEMO_PUBLIC_KEY, network: NETWORK };
   }
 };
 
@@ -65,12 +69,12 @@ export const requestWalletSignature = async (publicKey, description) => {
       return { success: true, signedXdr: "DEMO_SIGNED_XDR_PAYLOAD" };
     }
 
-    const server = new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org");
+    const server = new StellarSdk.Horizon.Server(HORIZON_URL);
     const account = await server.loadAccount(publicKey);
     
     const transaction = new StellarSdk.TransactionBuilder(account, {
       fee: StellarSdk.BASE_FEE,
-      networkPassphrase: StellarSdk.Networks.TESTNET,
+      networkPassphrase: PASSPHRASE,
     })
       .addOperation(StellarSdk.Operation.manageData({
         name: "GigPay_Action",
@@ -82,7 +86,7 @@ export const requestWalletSignature = async (publicKey, description) => {
     const xdr = transaction.toXDR();
     
     // Request real signature, but timeout if the popup freezes again
-    const signedTx = await withTimeout(signTransaction(xdr, { network: "TESTNET" }), 30000);
+    const signedTx = await withTimeout(signTransaction(xdr, { network: NETWORK }), 30000);
     
     if (signedTx.error) {
       throw new Error(signedTx.error);

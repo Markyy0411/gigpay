@@ -148,7 +148,7 @@ const ClientDashboard = () => {
                     </div>
                   )}
                   {task.status === 'Completed' && (
-                    <a href="https://stellar.expert/explorer/testnet" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
+                    <a href={`https://stellar.expert/explorer/${(import.meta.env.VITE_STELLAR_NETWORK || 'TESTNET').toLowerCase()}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
                       Tx: 9a2f...88c <ExternalLink size={12} />
                     </a>
                   )}
